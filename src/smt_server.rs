@@ -11,37 +11,6 @@ struct SmtServer<R: Read, W: Write, S: Solver> {
     print_success: bool,
 }
 
-trait Solver {
-    fn set_logic(&mut self, logic: String) -> Response<()>;
-    fn reset(&mut self) -> Response<()>;
-    fn reset_assertions(&mut self) -> Response<()>;
-    fn exit(&mut self) -> Response<()>;
-
-    fn push(&mut self) -> Response<()>;
-    fn pop(&mut self) -> Response<()>;
-
-    fn declare_sort(&mut self, name: &String, arity: &BigUint) -> Response<()>;
-    fn define_sort(&mut self, name: &String, args: &Vec<String>, def: &Sort) -> Response<()>;
-    fn declare_fun(&mut self, name: &String, sort: &Sort, args: &Vec<Sort>) -> Response<()>;
-    fn declare_datatypes(&mut self, datatypes: &Vec<(String, BigUint, DatatypeDec)>) -> Response<()>;
-
-    fn assert(&mut self, t: &Term) -> Response<()>;
-
-    fn check_sat(&mut self, assuming: &Vec<PropLiteral>) -> Response<CheckSatResponse>;
-    fn get_value(&mut self, terms: &Vec<Term>) -> Response<GetValueResponse>;
-    fn get_assignment(&mut self) -> Response<GetAssignmentResponse>;
-    fn get_model(&mut self) -> Response<GetModelResponse>;
-    fn get_unsat_assumptions(&mut self) -> Response<GetUnsatAssumptionsResponse>;
-    fn get_proof(&mut self) -> Response<GetProofResponse>;
-    fn get_unsat_core(&mut self) -> Response<GetUnsatCoreResponse>;
-
-    fn get_info(&mut self, key: &String) -> Response<GetInfoResponse>;
-    fn get_option(&mut self, key: &String) -> Response<GetOptionResponse>;
-    fn set_option(&mut self, opt: &Attribute) -> Response<()>;
-
-    fn set_info(&mut self, info: &Attribute) -> Response<()>;
-}
-
 macro_rules! success {
     ($this: expr, $res: expr) => {
         if($this.print_success || $res.is_err()) {

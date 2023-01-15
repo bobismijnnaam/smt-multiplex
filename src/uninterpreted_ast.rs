@@ -189,6 +189,7 @@ pub enum ScriptCommand {
 }
 
 pub enum GeneralFailure {
+    NotImplemented,
     Unsupported,
     Error(String),
 }

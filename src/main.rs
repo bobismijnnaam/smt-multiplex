@@ -11,6 +11,9 @@ mod display;
 mod smt_client;
 mod smt_server;
 
+mod solver;
+mod z3;
+
 use std::fs::File;
 use std::io::BufReader;
 use bigdecimal::BigDecimal;
