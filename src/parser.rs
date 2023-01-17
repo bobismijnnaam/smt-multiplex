@@ -3,7 +3,8 @@ use std::result;
 use bigdecimal::BigDecimal;
 use bitvec::vec::BitVec;
 use num_bigint::BigUint;
-use crate::{lexer, Token};
+use crate::lexer;
+use crate::lexer::Token;
 use crate::parser::PeekResult::*;
 use crate::uninterpreted_ast::*;
 

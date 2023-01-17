@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use crate::Parser;
+use crate::parser::Parser;
 
 struct SmtClient<R: Read, W: Write> {
     reader: Parser<R>,

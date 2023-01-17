@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use crate::uninterpreted_ast::*;
 use crate::uninterpreted_ast::GeneralFailure::NotImplemented;
 
-trait Solver {
+pub trait Solver {
     fn set_logic(&mut self, logic: String) -> Response<GeneralResponse> {
         Err(NotImplemented)
     }
@@ -31,6 +31,9 @@ trait Solver {
         Err(NotImplemented)
     }
     fn declare_fun(&mut self, name: &String, sort: &Sort, args: &Vec<Sort>) -> Response<GeneralResponse> {
+        Err(NotImplemented)
+    }
+    fn declare_const(&mut self, name: &String, sort: &Sort) -> Response<GeneralResponse> {
         Err(NotImplemented)
     }
     fn declare_datatypes(&mut self, datatypes: &Vec<(String, BigUint, DatatypeDec)>) -> Response<GeneralResponse> {
@@ -69,10 +72,12 @@ trait Solver {
     fn get_option(&mut self, key: &String) -> Response<GetOptionResponse> {
         Err(NotImplemented)
     }
-    fn set_option(&mut self, opt: &Attribute) -> Response<()> {
+    fn set_option(&mut self, opt: &Attribute) -> Response<GeneralResponse> {
         Err(NotImplemented)
     }
 
-    fn set_info(&mut self, info: &Attribute) -> Response<()>;
+    fn set_info(&mut self, info: &Attribute) -> Response<GeneralResponse> {
+        Err(NotImplemented)
+    }
 }
 

@@ -1,7 +1,8 @@
 use std::io::{Read, Write};
 use num_bigint::BigUint;
-use crate::{ScriptParser, UnrecoverableParseFailure};
+use crate::parser::{ScriptParser, UnrecoverableParseFailure};
 use crate::uninterpreted_ast::*;
+use crate::solver::Solver;
 
 struct SmtServer<R: Read, W: Write, S: Solver> {
     reader: ScriptParser<R>,

@@ -1,7 +1,9 @@
 use std::fmt::{Display, Formatter, Write};
 use bitvec::field::BitField;
-use crate::{lexer, Location, RecoverableParseError, Token, TokenReaderErr, UnrecoverableParseFailure};
-use crate::uninterpreted_ast::{Attribute, AttributeValue, CheckSatResponse, EchoResponse, GeneralFailure, GetAssertionsResponse, Identifier, Index, MatchCase, Pattern, QualifiedIdentifier, Reserved, ScriptCommand, SExpr, Sort, SortedVar, SpecConst, Term, VarBinding};
+use crate::lexer;
+use crate::parser::{Location, RecoverableParseError, UnrecoverableParseFailure};
+use crate::lexer::{Token, TokenReaderErr};
+use crate::uninterpreted_ast::{Attribute, AttributeValue, CheckSatResponse, EchoResponse, GeneralFailure, GeneralResponse, GetAssertionsResponse, Identifier, Index, MatchCase, Pattern, QualifiedIdentifier, Reserved, ScriptCommand, SExpr, Sort, SortedVar, SpecConst, Term, VarBinding};
 
 impl Display for Location {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -209,10 +211,10 @@ impl Display for Attribute {
         match self {
             Attribute::Key(k) => f.write_str(k),
             Attribute::Pair(k, v) => {
-                f.write_str(k)?;
+                write!(f, ":{}", k)?;
                 match v {
-                    AttributeValue::Const(c) => write!(f, "{}", c)?,
-                    AttributeValue::Symbol(s) => f.write_str(s)?,
+                    AttributeValue::Const(c) => write!(f, " {}", c)?,
+                    AttributeValue::Symbol(s) => write!(f, " {}", s)?,
                     AttributeValue::Expr(e) => {
                         if e.is_empty() {
                             f.write_str("()")?;
@@ -343,11 +345,11 @@ impl Display for ScriptCommand {
             ScriptCommand::CheckSat =>
                 f.write_str("(check-sat)"),
             ScriptCommand::CheckSatAssuming(_) => todo!(),
-            ScriptCommand::DeclareConst(_, _) => todo!(),
+            ScriptCommand::DeclareConst(name, sort) => write!(f, "(declare-const {} {})", name, sort),
             ScriptCommand::DeclareDatatype(_, _) => todo!(),
             ScriptCommand::DeclareDatatypes(_, _) => todo!(),
             ScriptCommand::DeclareFun { .. } => todo!(),
-            ScriptCommand::DeclareSort(_, _) => todo!(),
+            ScriptCommand::DeclareSort(name, arity) => write!(f, "(declare-sort {} {})", name, arity),
             ScriptCommand::DefineConst(_, _, _) => todo!(),
             ScriptCommand::DefineFun(_) => todo!(),
             ScriptCommand::DefineFunRec(_) => todo!(),
@@ -365,12 +367,12 @@ impl Display for ScriptCommand {
             ScriptCommand::GetUnsatCore => todo!(),
             ScriptCommand::GetValue(_) => todo!(),
             ScriptCommand::Pop(_) => todo!(),
-            ScriptCommand::Push(_) => todo!(),
+            ScriptCommand::Push(_) => write!(f, "(push)"),
             ScriptCommand::Reset => todo!(),
             ScriptCommand::ResetAssertions => todo!(),
             ScriptCommand::SetInfo(_) => todo!(),
             ScriptCommand::SetLogic(_) => todo!(),
-            ScriptCommand::SetOption(_) => todo!(),
+            ScriptCommand::SetOption(opt) => write!(f, "(set-option {})", opt)
         }
     }
 }
@@ -379,6 +381,7 @@ impl Display for GeneralFailure {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             GeneralFailure::Unsupported => f.write_str("unsupported"),
+            GeneralFailure::NotImplemented => f.write_str("not implemented"),
             GeneralFailure::Error(message) => {
                 f.write_str("(error ")?;
                 write!(f, "{}", Token::StringLiteral(message.clone()))?;
@@ -408,5 +411,11 @@ impl Display for EchoResponse {
 impl Display for GetAssertionsResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         todo!()
+    }
+}
+
+impl Display for GeneralResponse {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("success")
     }
 }
