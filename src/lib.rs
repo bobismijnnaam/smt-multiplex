@@ -9,7 +9,7 @@ mod ast;
 mod display;
 
 mod smt_client;
-mod smt_server;
+pub mod smt_server;
 
 pub mod solver;
-pub mod z3;
+pub mod compliant_solver;

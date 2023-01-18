@@ -1,10 +1,9 @@
 use std::io::{Read, Write};
-use num_bigint::BigUint;
 use crate::parser::{ScriptParser, UnrecoverableParseFailure};
 use crate::uninterpreted_ast::*;
 use crate::solver::Solver;
 
-struct SmtServer<R: Read, W: Write, S: Solver> {
+pub struct SmtServer<R: Read, W: Write, S: Solver> {
     reader: ScriptParser<R>,
     writer: W,
     solver: S,
@@ -33,7 +32,7 @@ macro_rules! result {
 
 impl<R: Read, W: Write, S: Solver> SmtServer<R, W, S> {
     pub fn new(read: R, write: W, solver: S) -> Self {
-        Self { reader: ScriptParser::new(read), writer: write, solver, print_success: true }
+        Self { reader: ScriptParser::new(read), writer: write, solver, print_success: false }
     }
 
     pub fn run(&mut self) -> Option<UnrecoverableParseFailure> {
@@ -45,11 +44,11 @@ impl<R: Read, W: Write, S: Solver> SmtServer<R, W, S> {
                 ScriptCommand::Assert(term) => success!(self, self.solver.assert(&term)),
                 ScriptCommand::CheckSat => result!(self, self.solver.check_sat(&vec![])),
                 ScriptCommand::CheckSatAssuming(lits) => result!(self, self.solver.check_sat(&lits)),
-                ScriptCommand::DeclareConst(_, _) => todo!(),
+                ScriptCommand::DeclareConst(name, sort) => success!(self, self.solver.declare_const(&name, &sort)),
                 ScriptCommand::DeclareDatatype(_, _) => todo!(),
                 ScriptCommand::DeclareDatatypes(_, _) => todo!(),
                 ScriptCommand::DeclareFun { .. } => todo!(),
-                ScriptCommand::DeclareSort(_, _) => todo!(),
+                ScriptCommand::DeclareSort(name, arity) => { success!(self, self.solver.declare_sort(&name, &arity)) }
                 ScriptCommand::DefineConst(_, _, _) => todo!(),
                 ScriptCommand::DefineFun(_) => todo!(),
                 ScriptCommand::DefineFunRec(_) => todo!(),
@@ -67,12 +66,16 @@ impl<R: Read, W: Write, S: Solver> SmtServer<R, W, S> {
                 ScriptCommand::GetUnsatCore => todo!(),
                 ScriptCommand::GetValue(_) => todo!(),
                 ScriptCommand::Pop(_) => todo!(),
-                ScriptCommand::Push(_) => todo!(),
+                ScriptCommand::Push(_) => { success!(self, self.solver.push()) }
                 ScriptCommand::Reset => todo!(),
                 ScriptCommand::ResetAssertions => todo!(),
                 ScriptCommand::SetInfo(_) => todo!(),
                 ScriptCommand::SetLogic(_) => todo!(),
-                ScriptCommand::SetOption(_) => todo!(),
+                ScriptCommand::SetOption(Attribute::Pair(k, AttributeValue::Symbol(v))) if k == "print-success" => {
+                    self.print_success = v == "true";
+                    success!(self, Response::Ok(GeneralResponse::Success))
+                }
+                ScriptCommand::SetOption(attribute) => { success!(self, self.solver.set_option(&attribute)) }
             };
         }
 

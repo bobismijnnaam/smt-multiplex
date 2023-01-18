@@ -7,18 +7,35 @@ It is intended as an exercise/reference for basic stuff.
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use bigdecimal::BigDecimal;
-use smt_multiplex::lexer::*;
 use smt_multiplex::parser::*;
-use smt_multiplex::z3::Z3;
+use smt_multiplex::compliant_solver::CompliantSolver;
 use smt_multiplex::solver::Solver;
-use smt_multiplex::uninterpreted_ast::ScriptCommand;
+use smt_multiplex::uninterpreted_ast::{GeneralResponse, Response, ScriptCommand};
+use smt_multiplex::smt_server::*;
 
 fn main() {
     let f = File::open("predicateExistsTest4.smt2").unwrap();
-    let mut reader = ScriptParser::new(BufReader::new(f));
+    // let mut reader = ScriptParser::new(BufReader::new(f));
+    let mut reader = BufReader::new(f);
+    let mut stdout = std::io::stdout().lock();
 
-    let mut solver = match Z3::new(Path::new("z3")) {
+    let solver = match CompliantSolver::z3(Path::new("z3")) {
+        Ok(s) => {
+            println!("Success");
+            s
+        }
+        Err(err) => {
+            println!("{}", err);
+            return
+        }
+    };
+
+    let mut smtServer = SmtServer::new(reader, stdout, solver);
+
+    smtServer.run();
+
+    /*
+    let mut solver = match CompliantSolver::z3(Path::new("z3")) {
         Ok(s) => {
             println!("Success");
             s
@@ -31,12 +48,27 @@ fn main() {
 
     for command in reader {
         println!("Got: {}", &command);
+
+        fn handleGeneral(response: Response<GeneralResponse>) {
+            match response {
+                Ok(x) => println!("Response: {}", x),
+                Err(x) => {
+                    println!("Error: {}", x);
+                    std::process::exit(1)
+                }
+            }
+        }
+
         let res = match command {
-            ScriptCommand::DeclareSort(name, arity) => { solver.declare_sort(&name, &arity) }
-            ScriptCommand::Assert(t) => { solver.assert(&t) }
-            ScriptCommand::CheckSat => { todo!() }
+            ScriptCommand::DeclareSort(name, arity) => { handleGeneral(solver.declare_sort(&name, &arity)) }
+            ScriptCommand::Assert(t) => { handleGeneral(solver.assert(&t)) }
+            ScriptCommand::CheckSat => {
+                match solver.check_sat(&vec![]) {
+
+                }
+            },
             ScriptCommand::CheckSatAssuming(_) => { todo!() }
-            ScriptCommand::DeclareConst(name, sort) => { solver.declare_const(&name, &sort) },
+            ScriptCommand::DeclareConst(name, sort) => { handleGeneral(solver.declare_const(&name, &sort)) },
             ScriptCommand::DeclareDatatype(_, _) => { todo!() }
             ScriptCommand::DeclareDatatypes(_, _) => { todo!() }
             ScriptCommand::DeclareFun { .. } => { todo!() }
@@ -64,14 +96,6 @@ fn main() {
             ScriptCommand::SetLogic(_) => { todo!() }
             ScriptCommand::SetOption(attribute) => { solver.set_option(&attribute) }
         };
-        // println!("{}", res);
-        match res {
-            Ok(x) => println!("Response: {}", x),
-            Err(x) => { println!("Error: {}", x); return }
-        }
     }
-
-    // if let Some(e) = reader.take_err() {
-    //     println!("{}", e);
-    // }
+     */
 }
