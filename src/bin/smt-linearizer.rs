@@ -11,16 +11,16 @@ use log::{Level, Metadata, Record};
 use smt_multiplex::args::Args;
 use smt_multiplex::linearizing_solver::LinearizingSolver;
 use smt_multiplex::log::enable_logging;
+use smt_multiplex::util::reader_from_args;
 
 fn main() {
-    enable_logging();
-
     let args = Args::parse();
+
+    enable_logging(args.log_path.as_deref());
 
     let mut ls = LinearizingSolver::new(CompliantSolver::z3(&args.z3_path.unwrap()).unwrap());
 
-    let f = File::open("predicateExistsTest4.smt2").unwrap();
-    let mut reader = BufReader::new(f);
+    let mut reader = reader_from_args(&args);
     let mut stdout = std::io::stdout().lock();
 
     let mut smtServer = SmtServer::new(reader, stdout, ls);

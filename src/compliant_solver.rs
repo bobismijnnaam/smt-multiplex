@@ -23,10 +23,9 @@ pub struct CompliantSolver {
 
 impl CompliantSolver {
     // Currently only tested with z3, but should probably make this generic over some enum of supported solvers
-    pub fn z3(p: &Path) -> Result<CompliantSolver, String> {
+    pub fn new(p: &Path, args: Vec<String>) -> Result<CompliantSolver, String> {
         let proc = Command::new(p)
-            .arg("-in") // Read from stdin
-            .arg("-nw") // No warnings
+            .args(args)
             .stdout(Stdio::piped())
             .stdin(Stdio::piped())
             .spawn();
@@ -41,13 +40,10 @@ impl CompliantSolver {
             buf: None
         };
 
-        trace!("started z3");
+        trace!("started {:?}", p);
 
         match z3.set_option(&Pair("print-success".into(), AttributeValue::Symbol("true".into()))) {
-            Ok(Success) => {
-                trace!("received success");
-                Ok(z3)
-            },
+            Ok(Success) => Ok(z3),
             Err(err) => Err(err.to_string())
         }
     }

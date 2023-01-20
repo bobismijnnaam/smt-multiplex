@@ -18,23 +18,20 @@ use smt_multiplex::args::Args;
 use smt_multiplex::linearizing_solver::LinearizingSolver;
 use clap::Parser;
 use smt_multiplex::log::enable_logging;
+use smt_multiplex::util::{reader_from_args, solver_from_args_or_env_or_exit};
 
 fn main() {
     let args = Args::parse();
 
-    enable_logging();
+    enable_logging(args.log_path.as_deref());
 
-    let mut reader: Box<dyn Read> = match &args.input {
-        Some(p) => {
-            Box::new(File::open(&p).unwrap())
-        }
-        None => {
-            Box::new(std::io::stdin().lock())
-        }
-    };
+    let reader = reader_from_args(&args);
     let mut stdout = std::io::stdout().lock();
 
-    let solver = CompliantSolver::z3(&args.z3_path.unwrap()).unwrap();
+    let (solver_path, solver_args) = solver_from_args_or_env_or_exit(args);
+    trace!("selected solver: {}", solver_path);
+
+    let solver = CompliantSolver::new(&solver_path, solver_args).unwrap();
 
     let mut smt_server = SmtServer::new(reader, stdout, solver);
     smt_server.run();
