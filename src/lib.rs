@@ -14,4 +14,3 @@ pub mod smt_server;
 pub mod solver;
 pub mod compliant_solver;
 pub mod linearizing_solver;
-pub mod forwarding_solver;
