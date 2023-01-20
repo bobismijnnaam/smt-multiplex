@@ -82,6 +82,7 @@ impl CompliantSolver {
             None => return Err(Error("could not conver byte to char".into()))
         };
         self.buf = Some(c);
+        // println!("Fresh read: {}", c);
         Ok(c)
     }
 
@@ -96,7 +97,7 @@ impl CompliantSolver {
     fn expect(&mut self, c: char) -> Response<()> {
         match self.peek()? {
             d if c == d => {
-                self.consume();
+                self.consume()?;
                 Ok(())
             },
             _ => {
@@ -125,11 +126,11 @@ impl CompliantSolver {
                 self.expect('n')?;
                 match self.peek()? {
                     'k' => {
-                        self.expect_str("known")?;
+                        self.expect_str("known\n")?;
                         Ok(CheckSatResponse::Unknown)
                     }
                     's' => {
-                        self.expect_str("sat")?;
+                        self.expect_str("sat\n")?;
                         Ok(CheckSatResponse::Unsat)
                     }
                     _ => {
@@ -166,18 +167,14 @@ impl Solver for CompliantSolver {
     }
 
     fn declare_const(&mut self, name: &String, sort: &Sort) -> Response<GeneralResponse> {
+        println!("; writing to z3: (declare-const {} {})", name, sort);
         self.stdin_write_fmt(format_args!("(declare-const {} {})\n", name, sort))?;
         self.consume_success()
     }
 
     fn assert(&mut self, t: &Term) -> Response<GeneralResponse> {
+        println!("; writing to z3: (assert {})", t);
         self.stdin_write_fmt(format_args!("(assert {})\n", t))?;
-        self.consume_success()
-    }
-
-    fn set_option(&mut self, opt: &Attribute) -> Response<GeneralResponse> {
-        println!("; writing to z3: (set-option {})", opt);
-        self.stdin_write_fmt(format_args!("(set-option {})\n", opt))?;
         self.consume_success()
     }
 
@@ -186,5 +183,17 @@ impl Solver for CompliantSolver {
         println!("; writing to z3: (check-sat)");
         self.stdin_write_fmt(format_args!("(check-sat)\n"))?;
         self.consume_sat_unsat()
+    }
+
+    fn set_option(&mut self, opt: &Attribute) -> Response<GeneralResponse> {
+        println!("; writing to z3: (set-option {})", opt);
+        self.stdin_write_fmt(format_args!("(set-option {})\n", opt))?;
+        self.consume_success()
+    }
+
+    fn reset(&mut self) -> Response<GeneralResponse> {
+        println!("; writing to z3: (reset)");
+        self.stdin_write_fmt(format_args!("(reset)\n"))?;
+        self.consume_success()
     }
 }

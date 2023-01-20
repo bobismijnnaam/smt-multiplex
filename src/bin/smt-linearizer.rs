@@ -1,11 +1,5 @@
-/*
-This file is just a front for whatever smt solver we use below it. It is not meant to do anything
-useful, just pass on commands, and print the result from the underlying solver to stdout.
-It is intended as an exercise/reference for basic stuff.
- */
-
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use smt_multiplex::parser::*;
 use smt_multiplex::compliant_solver::CompliantSolver;
@@ -14,16 +8,12 @@ use smt_multiplex::uninterpreted_ast::{GeneralResponse, Response, ScriptCommand}
 use smt_multiplex::smt_server::*;
 use clap::Parser;
 use log::{Level, Metadata, Record};
-use utf8_read::Reader;
 use smt_multiplex::linearizing_solver::LinearizingSolver;
 
-/// Passthrough program that sits inbetween a user and an SMT solver and does nothing.
+/// Program that linearizes an incremental SMT script such that the underlying solver only has to support non-incremental queries + reset
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
-    /// Input file. If not provided, read from stdin
-    input: Option<PathBuf>,
-
     /// Log path
     #[arg(short, long, value_name = "FILE")]
     log_path: Option<PathBuf>,
@@ -54,30 +44,15 @@ impl log::Log for MyLogger {
 // TODO: Make this work with the bottom part
 
 fn main() {
+
     let args = Args::parse();
 
-    let mut reader: Box<dyn Read> = match &args.input {
-        Some(p) => {
-            Box::new(File::open(&p).unwrap())
-        }
-        None => {
-            Box::new(std::io::stdin().lock())
-        }
-    };
+    let mut ls = LinearizingSolver::new(CompliantSolver::z3(&args.z3_path.unwrap()).unwrap());
+
+    let f = File::open("predicateExistsTest4.smt2").unwrap();
+    let mut reader = BufReader::new(f);
     let mut stdout = std::io::stdout().lock();
 
-
-    let solver = match CompliantSolver::z3(Path::new("z3")) {
-        Ok(s) => {
-            println!("Success");
-            s
-        }
-        Err(err) => {
-            println!("{}", err);
-            return
-        }
-    };
-
-    let mut smtServer = SmtServer::new(reader, stdout, solver);
+    let mut smtServer = SmtServer::new(reader, stdout, ls);
     smtServer.run();
 }

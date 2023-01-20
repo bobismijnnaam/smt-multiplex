@@ -4,12 +4,14 @@
 pub mod lexer;
 pub mod parser;
 pub mod uninterpreted_ast;
-mod ast;
+pub mod ast;
 
-mod display;
+pub mod display;
 
-mod smt_client;
+pub mod smt_client;
 pub mod smt_server;
 
 pub mod solver;
 pub mod compliant_solver;
+pub mod linearizing_solver;
+pub mod forwarding_solver;

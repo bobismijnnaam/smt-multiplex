@@ -380,8 +380,8 @@ impl Display for ScriptCommand {
 impl Display for GeneralFailure {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            GeneralFailure::Unsupported => f.write_str("unsupported"),
-            GeneralFailure::NotImplemented => f.write_str("not implemented"),
+            GeneralFailure::Unsupported => f.write_str("(error unsupported)"),
+            GeneralFailure::NotImplemented => f.write_str("(error not implemented)"),
             GeneralFailure::Error(message) => {
                 f.write_str("(error ")?;
                 write!(f, "{}", Token::StringLiteral(message.clone()))?;
