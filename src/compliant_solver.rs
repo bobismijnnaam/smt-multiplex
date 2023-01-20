@@ -4,6 +4,7 @@ use std::path::Path;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use bigdecimal::num_traits::AsPrimitive;
 use bitvec::macros::internal::funty::Fundamental;
+use log::trace;
 use num_bigint::BigUint;
 use crate::uninterpreted_ast::Attribute::Pair;
 use crate::uninterpreted_ast::{Attribute, AttributeValue, CheckSatResponse, GeneralFailure, GeneralResponse, PropLiteral, Response, Sort, SpecConst, Term};
@@ -40,11 +41,11 @@ impl CompliantSolver {
             buf: None
         };
 
-        println!("started z3");
+        trace!("started z3");
 
         match z3.set_option(&Pair("print-success".into(), AttributeValue::Symbol("true".into()))) {
             Ok(Success) => {
-                println!("Received success");
+                trace!("received success");
                 Ok(z3)
             },
             Err(err) => Err(err.to_string())
@@ -55,6 +56,7 @@ impl CompliantSolver {
         match &mut self.proc.stdin {
             None => Err(Error("stdin not found in inner process".into())),
             Some(stdin) => {
+                trace!("writing to solver: {}", fmt.to_string().trim());
                 match stdin.write_fmt(fmt) {
                     Ok(_) => Ok(()),
                     Err(err) => Err(Error(err.to_string()))
@@ -161,38 +163,32 @@ impl Solver for CompliantSolver {
     }
 
     fn declare_sort(&mut self, name: &String, arity: &BigUint) -> Response<GeneralResponse> {
-        println!("; writing to z3: (declare-sort {} {})", name, arity);
         self.stdin_write_fmt(format_args!("(declare-sort {} {})\n", name, arity))?;
         self.consume_success()
     }
 
     fn declare_const(&mut self, name: &String, sort: &Sort) -> Response<GeneralResponse> {
-        println!("; writing to z3: (declare-const {} {})", name, sort);
         self.stdin_write_fmt(format_args!("(declare-const {} {})\n", name, sort))?;
         self.consume_success()
     }
 
     fn assert(&mut self, t: &Term) -> Response<GeneralResponse> {
-        println!("; writing to z3: (assert {})", t);
         self.stdin_write_fmt(format_args!("(assert {})\n", t))?;
         self.consume_success()
     }
 
     fn check_sat(&mut self, assuming: &Vec<PropLiteral>) -> Response<CheckSatResponse> {
         assert!(assuming.is_empty());
-        println!("; writing to z3: (check-sat)");
         self.stdin_write_fmt(format_args!("(check-sat)\n"))?;
         self.consume_sat_unsat()
     }
 
     fn set_option(&mut self, opt: &Attribute) -> Response<GeneralResponse> {
-        println!("; writing to z3: (set-option {})", opt);
         self.stdin_write_fmt(format_args!("(set-option {})\n", opt))?;
         self.consume_success()
     }
 
     fn reset(&mut self) -> Response<GeneralResponse> {
-        println!("; writing to z3: (reset)");
         self.stdin_write_fmt(format_args!("(reset)\n"))?;
         self.consume_success()
     }

@@ -1,6 +1,9 @@
 // TODO remove once everything is actually used.
 #![allow(dead_code)]
 
+pub mod args;
+pub mod log;
+
 pub mod lexer;
 pub mod parser;
 pub mod uninterpreted_ast;

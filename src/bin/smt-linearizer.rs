@@ -8,42 +8,12 @@ use smt_multiplex::uninterpreted_ast::{GeneralResponse, Response, ScriptCommand}
 use smt_multiplex::smt_server::*;
 use clap::Parser;
 use log::{Level, Metadata, Record};
+use smt_multiplex::args::Args;
 use smt_multiplex::linearizing_solver::LinearizingSolver;
-
-/// Program that linearizes an incremental SMT script such that the underlying solver only has to support non-incremental queries + reset
-#[derive(Parser, Debug)]
-#[command(author, version, about)]
-struct Args {
-    /// Log path
-    #[arg(short, long, value_name = "FILE")]
-    log_path: Option<PathBuf>,
-
-    // z3 path
-    #[arg(long, value_name = "PATH")]
-    z3_path: Option<PathBuf>
-}
-
-static MY_LOGGER: MyLogger = MyLogger;
-
-struct MyLogger;
-
-impl log::Log for MyLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Info
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            println!("{} - {}", record.level(), record.args());
-        }
-    }
-    fn flush(&self) {}
-}
-
-// https://docs.rs/log/latest/log/fn.set_logger.html
-// TODO: Make this work with the bottom part
+use smt_multiplex::log::enable_logging;
 
 fn main() {
+    enable_logging();
 
     let args = Args::parse();
 

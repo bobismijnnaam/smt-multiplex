@@ -125,7 +125,7 @@ impl<R: Read> TokenReader<R> {
                 self.col_idx = 0;
                 self.line_idx += 1
             }
-            Some(_) => { self.col_idx += 1 }
+            Some(c) => { self.col_idx += 1 }
         }
 
         result
@@ -359,7 +359,9 @@ impl<R: Read> TokenReader<R> {
     pub fn skip_whitespace_and_comments(&mut self) {
         loop {
             match self.peek() {
-                Some(c) if is_whitespace(c) => { self.read().unwrap(); },
+                Some(c) if is_whitespace(c) => {
+                    self.read().unwrap();
+                },
                 Some(';') => self.skip_comment(),
                 None | Some(_) => return
             }
@@ -388,7 +390,11 @@ impl<R: Read> TokenReader<R> {
         };
 
         // Improve the starting position of parser rules.
-        self.skip_whitespace_and_comments();
+        /* TODO: This causes problems when you input (push) - the number parameter is optional, but somehow in the "maybe" test,
+                 the closing parenthesis ends up in "result" in line 376, then the skip_whitespace fucnction is called, causing
+                 the next newline to be skipped, and then a paren is expected, which blocks because we just emptied stdin. Hmm.
+         */
+        // self.skip_whitespace_and_comments();
 
         result
     }

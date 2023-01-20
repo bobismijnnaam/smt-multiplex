@@ -1,4 +1,5 @@
 use std::io::{Read, Write};
+use log::info;
 use crate::parser::{ScriptParser, UnrecoverableParseFailure};
 use crate::uninterpreted_ast::*;
 use crate::solver::Solver;
@@ -40,6 +41,7 @@ impl<R: Read, W: Write, S: Solver> SmtServer<R, W, S> {
             // Since we can't say Response<() union dyn Display>, some generics via macros :)
             // success! print success, or the error for Response<()>
             // result! flatly prints the Ok / Err case of Response<_ : Display>
+            info!("processing command: {}", command);
             let result = match command {
                 ScriptCommand::Assert(term) => success!(self, self.solver.assert(&term)),
                 ScriptCommand::CheckSat => result!(self, self.solver.check_sat(&vec![])),
